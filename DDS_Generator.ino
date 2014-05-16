@@ -32,7 +32,8 @@ float stepFac = 0; //this is the cursor position. Tells if Up/Down will incremen
 int timer = 0; //checks if a button has been pressed recently
 bool start = false; //start the DDS flag
 float freq = 1000; //User Defined Hz. Keep this value below 12200!
-int wavMode = 2; //constant to set wave output type (square, sine, triangle, saw)
+volatile float tuningConstant = 105200.0;
+int wavMode = 0; //constant to set wave output type (square, sine, triangle, saw)
 
 #define WAVE_DISP true //flags to set LCD mode
 #define FREQ_DISP false
@@ -79,7 +80,7 @@ void loop() //takes user input and the goes into DDS forever.
     lcd.noCursor();
     
     //set up DDS parameters
-    tuningWord = (unsigned long)(freq * 105200.0);//Change this number to change the frequency. Calculated multiplier finds frequency! Depends on things like CPU clock speed.
+    tuningWord = (unsigned long)(freq * tuningConstant);//Change this number to change the frequency. Calculated multiplier finds frequency! Depends on things like CPU clock speed.
     Timer1.initialize(16); //Setup the timer for DDS fastest value is 16
     Timer1.attachInterrupt(dds); //start DDS
     while (1) {
@@ -105,7 +106,7 @@ void dds() //Direct Digital Synthesis Lives Here.
     //grab the value from the table
     value = pgm_read_word(isinTable16 + tempPhase);
   }
-  else if(wavMode == 1) //a really 
+  else if(wavMode == 1) //a bandlimited square
   {
       if(tempPhase < 64)
       {
@@ -316,5 +317,20 @@ void parseLCD() //read button input from the LCD shield and update.
       }      
       printLCD();
     }
-
+    if(wavMode == 0)
+    {
+      tuningConstant = 105200.0; //sin
+    }
+    else if(wavMode == 1)
+    {
+      tuningConstant = 109000.0; //sqr
+    }
+    else if(wavMode == 2)
+    {
+      tuningConstant = 110200.0; //saw
+    }
+    else if(wavMode == 3)
+    {
+      tuningConstant = 118200.0; //tri
+    }
 }
